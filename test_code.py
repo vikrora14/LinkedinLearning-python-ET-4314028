@@ -1,39 +1,30 @@
-fname = input("Enter file name: ")
-if len(fname) < 1:
-    fname = "mbox-short.txt"
-
-# Create empty dictionary for word counts
-word_counts = dict()
+name = input("Enter file:")
+if len(name) < 1:
+    name = "mbox-short.txt"
+handle = open(name)name = input("Enter file:")
+if len(name) < 1:
+    name = "mbox-short.txt"
 
 try:
-    with open(fname) as fh:
-        for line in fh:
-            # Convert to lowercase and split into words
-            words = line.lower().split()
-            
-            # Count each word
-            for word in words:
-                # Remove punctuation if needed
-                word = word.strip('.,!?:;')
-                # Add or increment word count using get()
-                word_counts[word] = word_counts.get(word, 0) + 1
+    handle = open(name)
+    hours = dict()
 
-    # Print results sorted by count
-    print("\nWord count results:")
-    print("-----------------")
-    
-    # Sort dictionary items by count (descending)
-    sorted_counts = sorted(word_counts.items(), key=lambda x: x[1], reverse=True)
-    
-    # Print top 10 most common words
-    print("Top 10 most common words:")
-    for word, count in sorted_counts[:10]:
-        print(f"{word}: {count}")
-    
-    # Print total unique words
-    print(f"\nTotal unique words: {len(word_counts)}")
+    for line in handle:
+        if line.startswith('From '):
+            # Split line into words
+            words = line.split()
+            # Get time string (6th word)
+            time = words[5]
+            # Split time by colon and get hour
+            hour = time.split(':')[0]
+            # Count occurrences of each hour
+            hours[hour] = hours.get(hour, 0) + 1
+
+    # Sort and print the hours and counts
+    for hour in sorted(hours.keys()):
+        print(hour, hours[hour])
 
 except FileNotFoundError:
-    print(f"File {fname} not found")
-except Exception as e:
-    print(f"An error occurred: {e}")
+    print("File cannot be opened:", name)
+except IndexError:
+    print("File format is incorrect")
