@@ -1,35 +1,44 @@
 import socket
 
-def make_socket_connection():
-    try:
-        # Create a socket object
-        mysock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        
-        # Define the host and port
-        host = 'data.pr4e.org'  # Example host
-        port = 80  # HTTP port
-        
-        # Connect to the server
-        mysock.connect((host, port))
-        
-        # Create HTTP request
-        cmd = 'GET http://data.pr4e.org/romeo.txt HTTP/1.0\r\n\r\n'.encode()
-        mysock.send(cmd)
-        
-        # Receive and print data
-        while True:
-            data = mysock.recv(512)
-            if len(data) < 1:
-                break
-            print(data.decode())
+def get_http_headers():
+    # Create socket and connect
+    mysock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    mysock.connect(('data.pr4e.org', 80))
+    
+    # Send HTTP request
+    cmd = 'GET http://data.pr4e.org/intro-short.txt HTTP/1.0\r\n\r\n'.encode()
+    mysock.send(cmd)
+    
+    # Dictionary to store headers
+    headers = {}
+    
+    # Receive and parse headers
+    while True:
+        data = mysock.recv(512).decode()
+        if not data:
+            break
             
-        # Close the connection
-        mysock.close()
-        
-    except socket.error as e:
-        print(f"Socket error: {e}")
-    except Exception as e:
-        print(f"Error: {e}")
+        # Split headers from body
+        header_end = data.find('\r\n\r\n')
+        if header_end > 0:
+            header_lines = data[:header_end].split('\r\n')
+            
+            # Parse each header line
+            for line in header_lines[1:]:  # Skip first line (HTTP/1.1 200 OK)
+                if ':' in line:
+                    key, value = line.split(':', 1)
+                    headers[key.strip()] = value.strip()
+            break
+    
+    # Close connection
+    mysock.close()
+    
+    # Print required headers
+    print("Last-Modified:", headers.get('Last-Modified', 'Not found'))
+    print("ETag:", headers.get('ETag', 'Not found'))
+    print("Content-Length:", headers.get('Content-Length', 'Not found'))
+    print("Cache-Control:", headers.get('Cache-Control', 'Not found'))
+    print("Content-Type:", headers.get('Content-Type', 'Not found'))
 
-if __name__ == "__main__":
-    make_socket_connection()
+# Run the function
+get_http_headers()
