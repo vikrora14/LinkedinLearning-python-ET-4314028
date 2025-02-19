@@ -1,44 +1,31 @@
-import socket
+import urllib.request
+import json
 
-def get_http_headers():
-    # Create socket and connect
-    mysock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    mysock.connect(('data.pr4e.org', 80))
+def extract_comments():
+    # Prompt for URL
+    url = input('Enter URL: ')
+    if not url:
+        url = 'http://py4e-data.dr-chuck.net/comments_2172836.json'
     
-    # Send HTTP request
-    cmd = 'GET http://data.pr4e.org/intro-short.txt HTTP/1.0\r\n\r\n'.encode()
-    mysock.send(cmd)
+    print('Retrieving:', url)
     
-    # Dictionary to store headers
-    headers = {}
-    
-    # Receive and parse headers
-    while True:
-        data = mysock.recv(512).decode()
-        if not data:
-            break
-            
-        # Split headers from body
-        header_end = data.find('\r\n\r\n')
-        if header_end > 0:
-            header_lines = data[:header_end].split('\r\n')
-            
-            # Parse each header line
-            for line in header_lines[1:]:  # Skip first line (HTTP/1.1 200 OK)
-                if ':' in line:
-                    key, value = line.split(':', 1)
-                    headers[key.strip()] = value.strip()
-            break
-    
-    # Close connection
-    mysock.close()
-    
-    # Print required headers
-    print("Last-Modified:", headers.get('Last-Modified', 'Not found'))
-    print("ETag:", headers.get('ETag', 'Not found'))
-    print("Content-Length:", headers.get('Content-Length', 'Not found'))
-    print("Cache-Control:", headers.get('Cache-Control', 'Not found'))
-    print("Content-Type:", headers.get('Content-Type', 'Not found'))
+    try:
+        # Read JSON data from URL
+        data = urllib.request.urlopen(url).read()
+        print('Retrieved', len(data), 'characters')
+        
+        # Parse JSON
+        json_data = json.loads(data)
+        
+        # Extract comment counts and calculate sum
+        comments = json_data['comments']
+        total = sum(comment['count'] for comment in comments)
+        
+        print('Count:', len(comments))
+        print('Sum:', total)
+        
+    except Exception as e:
+        print('Error:', e)
 
-# Run the function
-get_http_headers()
+if __name__ == '__main__':
+    extract_comments()
